@@ -62,23 +62,20 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # データベース設定
 import dj_database_url
 
-if os.getenv('DATABASE_URL'):
-    # 本番環境：DATABASE_URL環境変数が設定されている場合
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-else:
-    # 開発環境：Docker環境用の設定
-    DATABASES = {
-        'default': dj_database_url.config(
-            default='postgres://postgres:postgres@db:5432/django_db',
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
+# デフォルトは本番用の接続文字列
+DEFAULT_DATABASE_URL = 'postgresql://japanmarketing:t53qBDxsKfXWp308FKBl7Z4LgnpzbGhq@dpg-ctqimibtq21c73a26opg-a/ai_agent_ses_postgre'
+
+# 開発環境の場合はDockerの設定を使用
+if DEBUG:
+    DEFAULT_DATABASE_URL = 'postgres://postgres:postgres@db:5432/django_db'
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=DEFAULT_DATABASE_URL,
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -109,13 +106,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery設定
-if os.getenv('REDIS_URL'):
-    # 本番環境：REDIS_URL環境変数が設定されている場合
-    CELERY_BROKER_URL = os.getenv('REDIS_URL')
-else:
-    # 開発環境：Docker環境用の設定
-    CELERY_BROKER_URL = 'redis://redis:6379/0'
+# デフォルトは本番用のRedis URL
+DEFAULT_REDIS_URL = 'redis://red-ctqinttsvqrc73conufg:6379'
 
+# 開発環境の場合はDockerの設定を使用
+if DEBUG:
+    DEFAULT_REDIS_URL = 'redis://redis:6379/0'
+
+CELERY_BROKER_URL = os.getenv('REDIS_URL', DEFAULT_REDIS_URL)
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
