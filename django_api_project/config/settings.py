@@ -60,24 +60,21 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # データベース設定
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DATABASE_NAME', 'django_db'),
-        'USER': os.getenv('DATABASE_USER', 'postgres'),
-        'PASSWORD': os.getenv('DATABASE_PASSWORD', ''),
-        'HOST': os.getenv('DATABASE_HOST', 'localhost'),
-        'PORT': os.getenv('DATABASE_PORT', '5432'),
-    }
-}
+import dj_database_url
 
-# Render.com用のデータベースURL設定
-if os.getenv('DATABASE_URL'):
-    import dj_database_url
-    DATABASES['default'] = dj_database_url.config(
+# 開発環境のデフォルト設定
+DEFAULT_DATABASE_URL = 'postgres://postgres:postgres@db:5432/django_db'
+# 本番環境（Render.com）の場合は環境変数から設定を取得
+if not DEBUG:
+    DEFAULT_DATABASE_URL = 'postgresql://japanmarketing:t53qBDxsKfXWp308FKBl7Z4LgnpzbGhq@dpg-ctqimibtq21c73a26opg-a/ai_agent_ses_postgre'
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=DEFAULT_DATABASE_URL,
         conn_max_age=600,
         conn_health_checks=True,
     )
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -108,7 +105,13 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Celery設定
-CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+# 開発環境のデフォルト設定
+DEFAULT_REDIS_URL = 'redis://redis:6379/0'
+# 本番環境（Render.com）の場合は環境変数から設定を取得
+if not DEBUG:
+    DEFAULT_REDIS_URL = 'redis://red-ctqinttsvqrc73conufg:6379'
+
+CELERY_BROKER_URL = os.getenv('REDIS_URL', DEFAULT_REDIS_URL)
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
