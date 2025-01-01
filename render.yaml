@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: django-api
+    env: docker
+    dockerfilePath: ./django_api_project/Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: django_db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: redis
+          type: redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com
+
+  - type: worker
+    name: celery-worker
+    env: docker
+    dockerfilePath: ./django_api_project/Dockerfile
+    command: celery -A config worker -l info
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: django_db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: redis
+          type: redis
+          property: connectionString
+
+  - type: redis
+    name: redis
+    ipAllowList: []
+    plan: free
+
+databases:
+  - name: django_db
+    databaseName: django_db
+    plan: free

@@ -10,3 +10,4 @@ gunicorn
 whitenoise
 drf-yasg
 django-filter
+dj-database-url

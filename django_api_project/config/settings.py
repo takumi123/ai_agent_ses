@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-your-secret-key')
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -59,13 +59,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# 開発環境用のSQLite設定
+# データベース設定
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DATABASE_NAME', 'django_db'),
+        'USER': os.getenv('DATABASE_USER', 'postgres'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', ''),
+        'HOST': os.getenv('DATABASE_HOST', 'localhost'),
+        'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
 }
+
+# Render.com用のデータベースURL設定
+if os.getenv('DATABASE_URL'):
+    import dj_database_url
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -127,7 +139,23 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
 ]
 
+if not DEBUG:
+    CORS_ALLOWED_ORIGINS.extend([
+        "https://*.onrender.com",
+    ])
+
 CORS_ALLOW_CREDENTIALS = True
+
+# セキュリティ設定
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Swagger設定
 SWAGGER_SETTINGS = {
